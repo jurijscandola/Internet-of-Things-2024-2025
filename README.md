@@ -29,128 +29,128 @@ This challenge focused on designing and optimizing an **ESP32-based IoT device**
 
 This exercise focused on optimizing the sink position in a Wireless Sensor Network (WSN) to maximize its lifetime.
 
-*   **Problem**: A parking lot with 10 sensors, each transmitting status updates every 10 minutes (2000 bits packet size, 5 mJ initial energy). The goal was to determine system lifetime with a fixed sink and then find an optimal sink position [17, 18].
-*   **Energy Model**: Energy consumption depends on TX/RX circuitry (`Ec = 50 nJ/bit`) and transmission energy (`Etx(d) = k · d^2` where `k = 1 nJ/bit/m^2`) [18, 19].
+*   **Problem**: A parking lot with 10 sensors, each transmitting status updates every 10 minutes (2000 bits packet size, 5 mJ initial energy). The goal was to determine system lifetime with a fixed sink and then find an optimal sink position.
+*   **Energy Model**: Energy consumption depends on TX/RX circuitry (`Ec = 50 nJ/bit`) and transmission energy (`Etx(d) = k · d^2` where `k = 1 nJ/bit/m^2`).
 *   **Key Findings**:
-    *   **Fixed Sink Position (20, 20)**: Sensor 1, being the furthest (26.17m), consumed the most energy (1.47 mJ per transmission), limiting the system lifetime to **3 transmissions (30 minutes)** [20-22].
-    *   **Optimal Sink Position**: An optimization problem was solved to find the coordinates that minimize energy consumption for the worst-case sensor [19, 23, 24]. The optimal position was identified as **(8.10, 6.80)**. While the source notes (1,2) as the worst case, the calculated optimal position reduces the maximum energy consumption.
-    *   With the optimal sink position, the energy consumption for the "worst-case" sensor was significantly reduced (e.25 mJ), extending the system lifetime to **20 cycles** [24, 25].
+    *   **Fixed Sink Position (20, 20)**: Sensor 1, being the furthest (26.17m), consumed the most energy (1.47 mJ per transmission), limiting the system lifetime to **3 transmissions (30 minutes)**.
+    *   **Optimal Sink Position**: An optimization problem was solved to find the coordinates that minimize energy consumption for the worst-case sensor. The optimal position was identified as **(8.10, 6.80)**. While the source notes (1,2) as the worst case, the calculated optimal position reduces the maximum energy consumption.
+    *   With the optimal sink position, the energy consumption for the "worst-case" sensor was significantly reduced (e.25 mJ), extending the system lifetime to **20 cycles**.
 *   **Trade-offs (Fixed vs. Dynamic Sink)**:
-    *   **Fixed Sink**: Low complexity, easy to implement, but higher energy consumption for distant nodes and shorter network lifetime [26].
-    *   **Dynamic Sink**: High complexity, requires adaptive control, but offers more balanced energy consumption and longer network lifetime due to energy balancing [26].
+    *   **Fixed Sink**: Low complexity, easy to implement, but higher energy consumption for distant nodes and shorter network lifetime.
+    *   **Dynamic Sink**: High complexity, requires adaptive control, but offers more balanced energy consumption and longer network lifetime due to energy balancing.
 
 ## Challenge 2: CoAP & MQTT Protocol Analysis
 
 This challenge involved a detailed analysis of CoAP and MQTT protocols, including packet capture analysis and energy consumption comparison.
 
-*   **Tools**: **Python** with the **`pyshark` library** was used to scan and filter `.pcap` files for protocol analysis [27-33].
+*   **Tools**: **Python** with the **`pyshark` library** was used to scan and filter `.pcap` files for protocol analysis.
 *   **Key Queries & Findings (from `challenge2.pcap` analysis)**:
-    *   **CQ1 (CoAP PUT Unsuccessful Responses)**: Identified **8** unique confirmable PUT requests that received an unsuccessful response from the local CoAP server [27, 34].
-    *   **CQ2 (CoAP Equal GET Requests)**: Found **3** CoAP resources (`secret`, `validate`, `large`) on `coap.me` public server that received the same number of unique Confirmable and Non-Confirmable GET requests [28, 35].
-    *   **CQ3 (MQTT Multi-level Wildcard Subscriptions)**: Counted **4** different MQTT clients subscribing to the public HiveMQ broker using multi-level wildcards (`#`) [29, 36].
-    *   **CQ4 (MQTT Last Will 'university' Topic)**: Determined that **1** MQTT client specified a Last Will Message directed to a topic with "university" as the first level [36, 37].
-    *   **CQ5 (MQTT Last Will without Wildcard)**: Identified **3** MQTT subscribers that would receive a Last Will message derived from a subscription without a wildcard [31, 38].
-    *   **CQ6 (MQTT Publish Retain & QoS 0)**: Found **208** MQTT PUBLISH messages directed to the public Mosquitto broker that were sent with the retain option and QoS "At most once" (QoS 0) [32, 33].
-    *   **CQ7 (MQTT-SN on Port 1885 Local Broker)**: Counted **0** MQTT-SN messages sent by clients to a broker on the local machine via UDP port 1885 [33, 39].
+    *   **CQ1 (CoAP PUT Unsuccessful Responses)**: Identified **8** unique confirmable PUT requests that received an unsuccessful response from the local CoAP server.
+    *   **CQ2 (CoAP Equal GET Requests)**: Found **3** CoAP resources (`secret`, `validate`, `large`) on `coap.me` public server that received the same number of unique Confirmable and Non-Confirmable GET requests.
+    *   **CQ3 (MQTT Multi-level Wildcard Subscriptions)**: Counted **4** different MQTT clients subscribing to the public HiveMQ broker using multi-level wildcards (`#`).
+    *   **CQ4 (MQTT Last Will 'university' Topic)**: Determined that **1** MQTT client specified a Last Will Message directed to a topic with "university" as the first level.
+    *   **CQ5 (MQTT Last Will without Wildcard)**: Identified **3** MQTT subscribers that would receive a Last Will message derived from a subscription without a wildcard.
+    *   **CQ6 (MQTT Publish Retain & QoS 0)**: Found **208** MQTT PUBLISH messages directed to the public Mosquitto broker that were sent with the retain option and QoS "At most once" (QoS 0).
+    *   **CQ7 (MQTT-SN on Port 1885 Local Broker)**: Counted **0** MQTT-SN messages sent by clients to a broker on the local machine via UDP port 1885.
 
 ### Energy Consumption Comparison (CoAP vs. MQTT)
 
 A comparative analysis of energy consumption for a battery-powered sensor and valve over 24 hours, interacting with a Raspberry Pi broker.
 
-*   **Assumptions**: `ETX = 50 nJ/bit`, `ERX = 58 nJ/bit`, `Ec = 2.4 mJ` (valve processing), ideal Wi-Fi [40]. Sensor transmits every 5 minutes, valve computes average every 30 minutes [41-43].
-*   **CoAP Case**: Communication only between sensor and valve (Raspberry Pi doesn't support CoAP). Sensor acts as client (PUT requests), valve as server (PUT responses, ACKs) [44].
-    *   **Sensor Consumption**: **18.73 mJ** over 24 hours [43, 45].
-    *   **Valve Consumption**: **133.85 mJ** over 24 hours (includes 48 computations) [43, 45].
-*   **MQTT Case**: Sensor (publisher), Valve (subscriber), Raspberry Pi (broker) [45].
-    *   **Sensor Consumption (Publisher)**: **7.88 mJ** over 24 hours [46, 47].
-    *   **Valve Consumption (Subscriber)**: **9.18 mJ** over 24 hours (includes processing) [48, 49].
-    *   **Total System Consumption (MQTT)**: **17.06 mJ** [50].
+*   **Assumptions**: `ETX = 50 nJ/bit`, `ERX = 58 nJ/bit`, `Ec = 2.4 mJ` (valve processing), ideal Wi-Fi [40]. Sensor transmits every 5 minutes, valve computes average every 30 minutes.
+*   **CoAP Case**: Communication only between sensor and valve (Raspberry Pi doesn't support CoAP). Sensor acts as client (PUT requests), valve as server (PUT responses, ACKs).
+    *   **Sensor Consumption**: **18.73 mJ** over 24 hours.
+    *   **Valve Consumption**: **133.85 mJ** over 24 hours (includes 48 computations).
+*   **MQTT Case**: Sensor (publisher), Valve (subscriber), Raspberry Pi (broker).
+    *   **Sensor Consumption (Publisher)**: **7.88 mJ** over 24 hours.
+    *   **Valve Consumption (Subscriber)**: **9.18 mJ** over 24 hours (includes processing).
+    *   **Total System Consumption (MQTT)**: **17.06 mJ**.
 *   **Energy Saving Solution (MQTT)**:
-    *   **Batching Transmissions**: By encoding temperature readings (2 bytes/reading) and transmitting 6 readings in a 12-byte payload every 30 minutes (instead of single readings every 5 minutes), significant savings were achieved [50, 51].
+    *   **Batching Transmissions**: By encoding temperature readings (2 bytes/reading) and transmitting 6 readings in a 12-byte payload every 30 minutes (instead of single readings every 5 minutes), significant savings were achieved.
     *   This strategy reduced the sensor's transmission operations and the overall number of publish operations.
-    *   **Estimated Energy Savings**: Approximately **50.77%** in transmission energy and **31.85%** in total system energy [52, 53].
+    *   **Estimated Energy Savings**: Approximately **50.77%** in transmission energy and **31.85%** in total system energy.
 
 ## Challenge 3: Node-RED & LoRaWAN
 
 This challenge involved developing a Node-RED flow for IoT data management and analyzing LoRaWAN network performance.
 
 *   **Node-RED Flow Development**:
-    *   **Objective**: Manage and monitor sensor data lifecycle: reading from CSV, publishing/receiving MQTT messages, logging acknowledgments, filtering, and visualizing data locally and via Thingspeak [54].
+    *   **Objective**: Manage and monitor sensor data lifecycle: reading from CSV, publishing/receiving MQTT messages, logging acknowledgments, filtering, and visualizing data locally and via Thingspeak.
     *   **Key Components & Logic**:
-        *   **Init Read CSV**: At startup, a CSV file is read, parsed, and stored in a flow variable for fast access [55].
-        *   **Trigger Send 5s**: Every 5 seconds, a message with a random ID (0-30000) and timestamp is generated, published to `challenge3/id_generator` (max 80 messages), and logged to `id_log.csv` [55, 56].
-        *   **Read from Topic**: Subscribes to the MQTT topic. Received IDs are modulo 7711 to compute an index `N` for matching rows in the parsed CSV data [57, 58].
+        *   **Init Read CSV**: At startup, a CSV file is read, parsed, and stored in a flow variable for fast access.
+        *   **Trigger Send 5s**: Every 5 seconds, a message with a random ID (0-30000) and timestamp is generated, published to `challenge3/id_generator` (max 80 messages), and logged to `id_log.csv`.
+        *   **Read from Topic**: Subscribes to the MQTT topic. Received IDs are modulo 7711 to compute an index `N` for matching rows in the parsed CSV data.
         *   **Conditional Processing**:
-            *   If the CSV row indicates a "Publish Message", MQTT topics are extracted, raw payloads parsed into JSON, and formatted messages are prepared for publishing. Temperature data in Fahrenheit is plotted and logged to `filtered_pubs.csv` [58-60]. A rate limit of 4 messages/minute is applied [61].
-            *   If the row indicates an "ACK message" (e.g., Connect Ack, Sub Ack), an ACK counter is incremented, logged to `ack_log.csv`, and the count is sent to **Thingspeak via HTTP API** [61, 62].
-        *   **Flow Termination**: A message counter limits total processed subscription messages to 80 [62].
-    *   **Visualization**: Valid Fahrenheit temperature data is parsed, averaged, and visualized in a real-time Node-RED chart [63].
+            *   If the CSV row indicates a "Publish Message", MQTT topics are extracted, raw payloads parsed into JSON, and formatted messages are prepared for publishing. Temperature data in Fahrenheit is plotted and logged to `filtered_pubs.csv`. A rate limit of 4 messages/minute is applied.
+            *   If the row indicates an "ACK message" (e.g., Connect Ack, Sub Ack), an ACK counter is incremented, logged to `ack_log.csv`, and the count is sent to **Thingspeak via HTTP API**.
+        *   **Flow Termination**: A message counter limits total processed subscription messages to 80.
+    *   **Visualization**: Valid Fahrenheit temperature data is parsed, averaged, and visualized in a real-time Node-RED chart.
 *   **LoRaWAN Network Analysis**:
-    *   **Scenario**: Europe (868 MHz, 125 kHz bandwidth), 1 gateway, 50 sensor nodes. Payload size `L = 84 Bytes` (based on person code 10710181) [64, 65]. Packet transmission follows a Poisson process (1 packet/minute) [64].
-    *   **Objective**: Find the largest Spreading Factor (SF) for a success rate of at least 70% [64].
-    *   **Finding**: Based on calculations and `thethingsnetwork.org` airtime calculator, **SF7** was determined to be the only option meeting the 70% success rate requirement, achieving **75.4%** [66-68].
+    *   **Scenario**: Europe (868 MHz, 125 kHz bandwidth), 1 gateway, 50 sensor nodes. Payload size `L = 84 Bytes` (based on person code 10710181). Packet transmission follows a Poisson process (1 packet/minute).
+    *   **Objective**: Find the largest Spreading Factor (SF) for a success rate of at least 70%.
+    *   **Finding**: Based on calculations and `thethingsnetwork.org` airtime calculator, **SF7** was determined to be the only option meeting the 70% success rate requirement, achieving **75.4%**.
 *   **System Design (Arduino MKR WAN 1310)**:
-    *   A system design was proposed for reading temperature/humidity from a **DHT22 sensor** and sending data to **Thingspeak over LoRaWAN** [68].
+    *   A system design was proposed for reading temperature/humidity from a **DHT22 sensor** and sending data to **Thingspeak over LoRaWAN**.
     *   **Steps**:
-        1.  Set up a LoRaWAN server via **The Things Network (TTN)** and register the Arduino device [69].
-        2.  Create two distinct **Thingspeak channels** (for temperature and humidity) and obtain API keys [69].
-        3.  Configure a **webhook in TTN** to trigger upon receiving payloads from the LoRaWAN device, forwarding data to the corresponding Thingspeak channels via HTTP [69].
+        1.  Set up a LoRaWAN server via **The Things Network (TTN)** and register the Arduino device.
+        2.  Create two distinct **Thingspeak channels** (for temperature and humidity) and obtain API keys.
+        3.  Configure a **webhook in TTN** to trigger upon receiving payloads from the LoRaWAN device, forwarding data to the corresponding Thingspeak channels via HTTP.
 *   **LoRaSim Figure Reproduction**:
-    *   Reproduced Figure 5 (single-sink) and Figure 7 (multi-sink) from the paper "Do LoRa Low-Power Wide-Area Networks Scale?" using the **LoRa simulator (`lorasim/loraDir.py` and `lorasim/loraDirMulBS.py`)** [70-72].
-    *   The simulation involved varying the number of nodes and sinks, with the collision flag enabled [70, 72].
+    *   Reproduced Figure 5 (single-sink) and Figure 7 (multi-sink) from the paper "Do LoRa Low-Power Wide-Area Networks Scale?" using the **LoRa simulator (`lorasim/loraDir.py` and `lorasim/loraDirMulBS.py`)**.
+    *   The simulation involved varying the number of nodes and sinks, with the collision flag enabled.
 
 ## Homework Exercise 1: Forklift IoT System Design
 
 This exercise focused on designing a comprehensive IoT system for real-time localization and status monitoring of forklifts in an industrial warehouse.
 
 *   **Hardware Components**:
-    *   **ESP32**: Main microcontroller [73].
-    *   **IMU (Accelerometer & Gyroscope)**: For motion tracking, distance estimation, and collision detection [73, 74].
-    *   **LoRa Module**: For long-range, low-power wireless communication with LoRa gateways [74].
-    *   **BLE Module**: Scans fixed BLE beacons for indoor positioning via trilateration [74, 75].
-    *   **GPS Module**: For accurate outdoor positioning [74].
+    *   **ESP32**: Main microcontroller.
+    *   **IMU (Accelerometer & Gyroscope)**: For motion tracking, distance estimation, and collision detection.
+    *   **LoRa Module**: For long-range, low-power wireless communication with LoRa gateways.
+    *   **BLE Module**: Scans fixed BLE beacons for indoor positioning via trilateration.
+    *   **GPS Module**: For accurate outdoor positioning.
 *   **BLE Beacon Setup (Indoor Localization)**:
-    *   Fixed BLE beacons broadcast ID and signal strength in the 500m² underground warehouse [75].
-    *   Forklift ESP32 scans RSSI values, sends to backend for trilateration [75].
+    *   Fixed BLE beacons broadcast ID and signal strength in the 500m² underground warehouse.
+    *   Forklift ESP32 scans RSSI values, sends to backend for trilateration.
 *   **Communication Strategy (Hybrid)**:
     *   **LoRa Dual-Frequency**:
-        *   **Sub-GHz (e.g., 433 MHz)**: For underground indoor communication (better penetration) [76].
-        *   **Higher LoRa Frequency (e.g., 868/915 MHz)**: For outdoor yard communication (better throughput/range) [76].
-    *   **BLE**: Exclusively indoors for proximity-based positioning via trilateration [77].
+        *   **Sub-GHz (e.g., 433 MHz)**: For underground indoor communication (better penetration).
+        *   **Higher LoRa Frequency (e.g., 868/915 MHz)**: For outdoor yard communication (better throughput/range).
+    *   **BLE**: Exclusively indoors for proximity-based positioning via trilateration.
 *   **Data Transmission Frequency (Optimized)**:
-    *   **Position Updates**: Every 5 seconds (active movement), every 30 seconds (stationary) [77].
-    *   **Impact/Collision Events**: Sent immediately using interrupt-driven logic [78].
-    *   **Aggregated Daily Metrics**: Sent at end of shift or when docked [78].
-*   **Backend Architecture**: Designed for low-latency ingestion, efficient processing, scalable storage, and real-time visualization [79].
-    *   **Data Ingestion**: LoRa Gateway publishes telemetry data (BLE RSSI, GPS, accelerometer) to an **MQTT Broker** (e.g., Mosquitto) [79].
-    *   **Data Processing**: A **Stream Processor** subscribes to MQTT topics, parses data, performs BLE trilateration, merges GPS/trilaterated coordinates, detects impacts, and aggregates metrics [80].
-    *   **Data Storage**: **Time-Series Database** for telemetry, **Relational Database** for metadata (forklifts, beacons) [80].
-    *   **Visualization & Monitoring**: A **Web Dashboard** displays real-time forklift positions, KPIs (distance, speed, impacts, battery levels) [81].
+    *   **Position Updates**: Every 5 seconds (active movement), every 30 seconds (stationary).
+    *   **Impact/Collision Events**: Sent immediately using interrupt-driven logic.
+    *   **Aggregated Daily Metrics**: Sent at end of shift or when docked.
+*   **Backend Architecture**: Designed for low-latency ingestion, efficient processing, scalable storage, and real-time visualization.
+    *   **Data Ingestion**: LoRa Gateway publishes telemetry data (BLE RSSI, GPS, accelerometer) to an **MQTT Broker** (e.g., Mosquitto).
+    *   **Data Processing**: A **Stream Processor** subscribes to MQTT topics, parses data, performs BLE trilateration, merges GPS/trilaterated coordinates, detects impacts, and aggregates metrics.
+    *   **Data Storage**: **Time-Series Database** for telemetry, **Relational Database** for metadata (forklifts, beacons).
+    *   **Visualization & Monitoring**: A **Web Dashboard** displays real-time forklift positions, KPIs (distance, speed, impacts, battery levels).
 
 ## Homework Exercise 2: IEEE 802.15.4 CFP Slot Assignment
 
 This exercise analyzed an ESP32-based camera system using IEEE 802.15.4 in beacon-enabled mode (CFP only).
 
-*   **System**: ESP32-based IoT camera monitoring system. Payload size varies based on person count in frame: 1 KB (0 persons), 3 KB (1 person), 6 KB (>1 person) [82, 83].
-*   **Probabilistic Model**: Number of people `k` follows a **Poisson distribution** with `λ = 0.15` persons/frame [82, 83].
+*   **System**: ESP32-based IoT camera monitoring system. Payload size varies based on person count in frame: 1 KB (0 persons), 3 KB (1 person), 6 KB (>1 person).
+*   **Probabilistic Model**: Number of people `k` follows a **Poisson distribution** with `λ = 0.15` persons/frame.
 *   **Key Calculations**:
     *   **Output Rate Probability Mass Function (PMF)**:
-        *   `P(r = r0 | 0 persons, 1KB payload, 8kb)`: `e^(-0.15)` ≈ **0.8607** [83, 84].
-        *   `P(r = r1 | 1 person, 3KB payload, 24kb)`: `0.15 * e^(-0.15)` ≈ **0.1291** [83, 84].
-        *   `P(r = r2 | ≥2 persons, 6KB payload, 48kb)`: `1 - P(0) - P(1)` ≈ **0.0102** [83, 84].
-    *   **CFP Slot Assignment & Duty Cycle**: For a system with 1 PAN coordinator and 3 camera nodes, nominal bit rate `R = 250 kbps`, packets `L = 128 bytes` [85, 86]:
-        *   **Slot Time (Ts)**: **4.096 ms** [87].
-        *   **Number of slots in CFP (nCFP)**: **18** (for 3 nodes transmitting max 6KB payload) + 1 beacon control slot = **19 active slots** [87, 88].
-        *   **Active Period (Tactive)**: **77.82 ms** [88].
-        *   **Inactive Period (Tinactive)**: **1.202 s** (with Beacon Interval `BI = 1.28 s`) [88].
-        *   **Duty Cycle**: **6.08%**, well below the 10% target [88].
-    *   **Maximum Additional Cameras**: To keep the duty cycle below 10%, considering the worst-case scenario (every node transmitting 1KB every beacon interval), an additional **2 cameras** can be added, for a total of N=5 nodes [89, 90].
+        *   `P(r = r0 | 0 persons, 1KB payload, 8kb)`: `e^(-0.15)` ≈ **0.8607**.
+        *   `P(r = r1 | 1 person, 3KB payload, 24kb)`: `0.15 * e^(-0.15)` ≈ **0.1291**.
+        *   `P(r = r2 | ≥2 persons, 6KB payload, 48kb)`: `1 - P(0) - P(1)` ≈ **0.0102**.
+    *   **CFP Slot Assignment & Duty Cycle**: For a system with 1 PAN coordinator and 3 camera nodes, nominal bit rate `R = 250 kbps`, packets `L = 128 bytes`:
+        *   **Slot Time (Ts)**: **4.096 ms**.
+        *   **Number of slots in CFP (nCFP)**: **18** (for 3 nodes transmitting max 6KB payload) + 1 beacon control slot = **19 active slots**.
+        *   **Active Period (Tactive)**: **77.82 ms**.
+        *   **Inactive Period (Tinactive)**: **1.202 s** (with Beacon Interval `BI = 1.28 s`).
+        *   **Duty Cycle**: **6.08%**, well below the 10% target.
+    *   **Maximum Additional Cameras**: To keep the duty cycle below 10%, considering the worst-case scenario (every node transmitting 1KB every beacon interval), an additional **2 cameras** can be added, for a total of N=5 nodes.
 
 ## Homework Exercise 3: RFID Dynamic Frame ALOHA
 
 This exercise involved simulating an RFID system using the Dynamic Frame ALOHA (DFA) protocol to evaluate collision resolution efficiency.
 
-*   **System**: RFID system with `N = 4` tags [91, 92].
+*   **System**: RFID system with `N = 4` tags.
 *   **Protocol**: Dynamic Frame ALOHA (DFA), where the frame size is dynamically updated to match the current backlog after the first frame.
 *   **Simulation Method**: **Monte Carlo simulation** (100,000 executions for each `r1`) using a Python script.
 *   **Objective**: Find the overall collision resolution efficiency `η = N / L` for different initial frame sizes `r1 = {1, 2, 3, 4, 5, 6}`. `L` is the total number of time slots needed to identify all tags.
