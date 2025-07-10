@@ -11,19 +11,19 @@ This repository summarizes the work completed across various Internet of Things 
 
 This challenge focused on designing and optimizing an **ESP32-based IoT device** for distance measurement and status reporting, with a strong emphasis on power efficiency.
 
-*   **Project Overview**: An ESP32 integrated with an **HC-SR04 ultrasonic sensor** measures distance, communicating via **ESP-NOW protocol**. The primary goal was to optimize power consumption using **deep sleep mode**. The device detects if an object is within a predefined minimum distance (50 cm) and sends an "OCCUPIED" or "FREE" status message to a receiver [1].
+*   **Project Overview**: An ESP32 integrated with an **HC-SR04 ultrasonic sensor** measures distance, communicating via **ESP-NOW protocol**. The primary goal was to optimize power consumption using **deep sleep mode**. The device detects if an object is within a predefined minimum distance (50 cm) and sends an "OCCUPIED" or "FREE" status message to a receiver.
 *   **Key Technologies & Implementations**:
-    *   **ESP32**: Main processing unit [1].
-    *   **HC-SR04 Ultrasonic Sensor**: Used for distance measurement, triggered by a 10-microsecond pulse on `TRIG_PIN` (pin 5) and reading pulse width from `ECHO_PIN` (pin 18) [2-4].
-    *   **ESP-NOW Protocol**: Utilized for communication with a master device, sending status messages based on distance threshold [1, 5-8].
-    *   **Deep Sleep Mode**: Enabled for power saving using `esp_sleep_enable_timer_wakeup()` for a calculated duty cycle `X` (36 seconds) and initiated via `esp_deep_sleep_start()` [1, 6, 9].
-    *   **Wi-Fi Management**: Wi-Fi is enabled in Station mode (`WIFI_STA`) only for ESP-NOW initialization and data transmission, then immediately disabled (`WIFI_OFF`) to conserve power [6, 8, 9].
-    *   **RTC Memory**: `RTC_DATA_ATTR` was used to store `lastValue` persistently across deep sleep cycles, enabling conditional notification only when the status changes, further optimizing energy [10, 11].
+    *   **ESP32**: Main processing unit.
+    *   **HC-SR04 Ultrasonic Sensor**: Used for distance measurement, triggered by a 10-microsecond pulse on `TRIG_PIN` (pin 5) and reading pulse width from `ECHO_PIN` (pin 18).
+    *   **ESP-NOW Protocol**: Utilized for communication with a master device, sending status messages based on distance threshold.
+    *   **Deep Sleep Mode**: Enabled for power saving using `esp_sleep_enable_timer_wakeup()` for a calculated duty cycle `X` (36 seconds) and initiated via `esp_deep_sleep_start()`.
+    *   **Wi-Fi Management**: Wi-Fi is enabled in Station mode (`WIFI_STA`) only for ESP-NOW initialization and data transmission, then immediately disabled (`WIFI_OFF`) to conserve power.
+    *   **RTC Memory**: `RTC_DATA_ATTR` was used to store `lastValue` persistently across deep sleep cycles, enabling conditional notification only when the status changes, further optimizing energy.
 *   **Energy Consumption & Lifetime Analysis**:
-    *   The project calculated total battery energy `Y = 15,181 J` [12].
-    *   Average power consumption for different states (Deep Sleep, Idle/Boot/WiFi Off, WiFi On, Transmission, Sensor Read) was estimated [13, 14].
-    *   Initial lifetime was estimated at **13,627 cycles** (approx. 1114 mJ per transmission cycle) [10, 15].
-    *   Through optimizations like conditional notification and Wi-Fi management, energy consumption was reduced to **966.41 mJ** per cycle, extending the device's lifetime to **15,708 cycles** [11, 16]. This represents a significant improvement in battery life [11].
+    *   The project calculated total battery energy `Y = 15,181 J`.
+    *   Average power consumption for different states (Deep Sleep, Idle/Boot/WiFi Off, WiFi On, Transmission, Sensor Read) was estimated.
+    *   Initial lifetime was estimated at **13,627 cycles** (approx. 1114 mJ per transmission cycle).
+    *   Through optimizations like conditional notification and Wi-Fi management, energy consumption was reduced to **966.41 mJ** per cycle, extending the device's lifetime to **15,708 cycles**. This represents a significant improvement in battery life.
 
 ## Challenge 1 (Exercise): Wireless Sensor Network Sink Optimization
 
